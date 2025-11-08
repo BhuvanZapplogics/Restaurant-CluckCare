@@ -1,6 +1,6 @@
 {
-    "name": "snack_hack_app",
-    "short_name": "snack_hack_app",
+    "name": "cluck_care",
+    "short_name": "cluck_care",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

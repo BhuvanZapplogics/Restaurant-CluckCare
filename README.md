@@ -1,4 +1,4 @@
-# snack_hack_app
+# cluck_care
 
 A new Flutter project.
 
