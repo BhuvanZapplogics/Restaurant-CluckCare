@@ -29,23 +29,16 @@ class _StaffScreenState extends State<StaffScreen> {
   Future<void> _loadStaff() async {
     setState(() => _isLoading = true);
     try {
-      final loadedStaff = await _repository.getAllStaff();
-      // Daily reset: if lastStatusDate != today, clear today's status
-      final String today = DateTime.now().toIso8601String().split('T').first; // yyyy-MM-dd
-      final List<StaffModel> normalized = loadedStaff.map((s) {
-        if (s.lastStatusDate == today) return s;
-        // Clear status for a new day
-        return s.copyWith(status: null, checkInTime: '-', lastStatusDate: null);
-      }).toList();
-      // Persist any resets
-      for (final s in normalized) {
-        if (s != loadedStaff.firstWhere((x) => x.id == s.id)) {
-          // not a safe identity check; to avoid overcomplication, just write all
-        }
+      final String today = DateTime.now().toIso8601String().split('T').first;
+      final lastReset = await _repository.getLastResetDate();
+      if (lastReset != today) {
+        await _repository.clearStaffListOnly();
+        await _repository.setLastResetDate(today);
       }
-      await _repository.saveAllStaff(normalized);
+
+      final loadedStaff = await _repository.getAllStaff();
       setState(() {
-        staff = normalized;
+        staff = loadedStaff;
         _isLoading = false;
       });
     } catch (e) {
@@ -177,78 +170,54 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   Widget _buildEmptyStaffIllustration(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withOpacity(0.3)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(60),
-              border: Border.all(color: AppColors.border.withOpacity(0.3)),
-            ),
-            child: const Icon(Icons.groups_2_outlined, size: 64, color: AppColors.textSecondary),
+    final availableHeight = MediaQuery.of(context).size.height * 0.45;
+    return SizedBox(
+      height: availableHeight,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          width: 260,
+          decoration: BoxDecoration(
+            color: AppColors.cardSurface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border.withOpacity(0.3)),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'No staff yet',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            filterIndex == 0
-                ? 'Add your first team member to start tracking attendance.'
-                : 'No staff in this filter. Try a different filter or add staff.',
-            style: TextStyle(color: AppColors.textSecondary.withOpacity(0.9), fontSize: 14),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: 160,
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.person_add_alt_1),
-              label: const Text('Add Staff'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.textPrimary,
-                side: BorderSide(color: AppColors.border.withOpacity(0.5)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: AppColors.bgSurface,
+                  borderRadius: BorderRadius.circular(75),
+                  border: Border.all(color: AppColors.border.withOpacity(0.3)),
+                ),
+                child: const Icon(Icons.groups_2_outlined, size: 64, color: AppColors.textSecondary),
               ),
-              onPressed: () async {
-                final newStaffData = await Navigator.of(context).push<Map<String, dynamic>>(
-                  MaterialPageRoute(builder: (_) => const AddStaffScreen()),
-                );
-                if (newStaffData != null) {
-                  final newStaff = StaffModel(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: newStaffData['name'],
-                    role: newStaffData['role'],
-                    employeeId: newStaffData['id'],
-                    status: null,
-                    checkInTime: newStaffData['checkIn'],
-                    avatarPath: newStaffData['avatarPath'] as String?,
-                    lastStatusDate: null,
-                  );
-                  await _repository.addStaff(newStaff);
-                  await _loadStaff();
-                }
-              },
-            ),
+              const SizedBox(height: 16),
+              const Text(
+                'No staff yet',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                filterIndex == 0
+                    ? 'Add your first team member to start tracking attendance.'
+                    : 'No staff in this filter. Try a different filter or add staff.',
+                style: TextStyle(color: AppColors.textSecondary.withOpacity(0.9), fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

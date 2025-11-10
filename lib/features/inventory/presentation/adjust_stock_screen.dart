@@ -60,8 +60,8 @@ class _AdjustStockScreenState extends State<AdjustStockScreen> {
 
     if (parLevel != null && reorderPoint != null) {
       if (parLevel <= reorderPoint) {
-        parErr = 'Target Stock must be > Reorder Point';
-        reorderErr = 'Reorder Point must be < Target Stock';
+        parErr = 'Target Stock must be higher than Reorder Point';
+        reorderErr = 'Reorder Point must be lower than Target Stock';
       }
     }
 
@@ -489,6 +489,13 @@ class _AdjustStockScreenState extends State<AdjustStockScreen> {
                     borderSide: BorderSide(color: color, width: 2),
                   ),
                   errorText: errorText,
+                  errorMaxLines: 2,
+                  errorStyle: const TextStyle(
+                    fontSize: 12,
+                    height: 1.3,
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.w600,
+                  ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Colors.red, width: 1.5),

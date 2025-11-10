@@ -6,6 +6,7 @@ import '../../../data/repositories/menu_repository.dart';
 import '../../../core/cart/cart_scope.dart';
 import '../../../core/app_flow/app_controllers.dart';
 import '../../billing/presentation/billing_screen.dart';
+import '../../../data/repositories/staff_repository.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -263,9 +264,9 @@ class _MenuGrid extends StatelessWidget {
       child: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.65,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
+          mainAxisExtent: 270,
         ),
         itemCount: controller.items.length,
         itemBuilder: (context, index) {
@@ -295,7 +296,7 @@ class _MenuCard extends StatelessWidget {
         children: [
           // Image section
           Expanded(
-            flex: 3,
+            flex: 4,
             child: Stack(
               children: [
                 ClipRRect(
@@ -360,7 +361,7 @@ class _MenuCard extends StatelessWidget {
           ),
           // Content section
           Expanded(
-            flex: 2,
+            flex: 4,
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -375,50 +376,54 @@ class _MenuCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    item.description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${item.price.toStringAsFixed(0)} ${item.currency}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.primaryCta,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  Expanded(
+                    child: Text(
+                      item.description,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
                       ),
-                      // Bottom plus icon
-                      GestureDetector(
+                      softWrap: true,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${item.price.toStringAsFixed(0)} ${item.currency}',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.primaryCta,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        // Bottom plus icon
+                        GestureDetector(
                         onTap: () {
-                          HapticFeedback.lightImpact();
+                            HapticFeedback.lightImpact();
                           _navigateToBilling(context);
-                        },
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryCta.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
+                          },
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryCta.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppColors.primaryCta,
+                                width: 1,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.add,
                               color: AppColors.primaryCta,
-                              width: 1,
+                              size: 18,
                             ),
                           ),
-                          child: Icon(
-                            Icons.add,
-                            color: AppColors.primaryCta,
-                            size: 18,
-                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -429,7 +434,19 @@ class _MenuCard extends StatelessWidget {
     );
   }
 
-  void _navigateToBilling(BuildContext context) {
+  Future<void> _navigateToBilling(BuildContext context) async {
+    final staffRepo = StaffRepository();
+    final staffList = await staffRepo.getAllStaff();
+    if (staffList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add staff before creating orders.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     // Add item to cart before navigating
     final cart = AppControllers.cartController;
     cart.addItem(
@@ -438,8 +455,8 @@ class _MenuCard extends StatelessWidget {
       price: item.price,
       imageUrl: item.imageUrl,
     );
-    
-    Navigator.of(context).push(
+
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => CartScope(
           controller: AppControllers.cartController,

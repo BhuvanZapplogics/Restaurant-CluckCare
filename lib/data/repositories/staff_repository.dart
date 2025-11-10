@@ -3,6 +3,8 @@ import '../models/staff.dart';
 
 class StaffRepository {
   static const String _boxName = 'staff';
+  static const String _staffListKey = 'staff_list';
+  static const String _lastResetKey = 'staff_last_reset';
   Box<dynamic>? _box;
 
   // Initialize Hive box
@@ -15,7 +17,7 @@ class StaffRepository {
   // Get all staff
   Future<List<StaffModel>> getAllStaff() async {
     await init();
-    final List<dynamic> staffList = _box?.get('staff_list', defaultValue: []) ?? [];
+    final List<dynamic> staffList = _box?.get(_staffListKey, defaultValue: []) ?? [];
     return staffList
         .map((item) => StaffModel.fromJson(Map<String, dynamic>.from(item as Map)))
         .toList();
@@ -25,7 +27,7 @@ class StaffRepository {
   Future<void> saveAllStaff(List<StaffModel> staff) async {
     await init();
     final staffJson = staff.map((s) => s.toJson()).toList();
-    await _box?.put('staff_list', staffJson);
+    await _box?.put(_staffListKey, staffJson);
   }
 
   // Add a new staff member
@@ -56,6 +58,21 @@ class StaffRepository {
   Future<void> clearAll() async {
     await init();
     await _box?.clear();
+  }
+
+  Future<String?> getLastResetDate() async {
+    await init();
+    return _box?.get(_lastResetKey) as String?;
+  }
+
+  Future<void> setLastResetDate(String date) async {
+    await init();
+    await _box?.put(_lastResetKey, date);
+  }
+
+  Future<void> clearStaffListOnly() async {
+    await init();
+    await _box?.delete(_staffListKey);
   }
 }
 

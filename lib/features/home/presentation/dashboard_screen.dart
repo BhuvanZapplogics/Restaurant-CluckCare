@@ -2,8 +2,6 @@ import 'package:cluck_care/app/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cluck_care/features/restaurant/presentation/restaurant_screen.dart';
-import 'package:cluck_care/core/app_flow/onboarding_service.dart';
-import 'package:cluck_care/features/splash/presentation/splash_screen.dart';
 import 'package:cluck_care/features/orders/controllers/orders_scope.dart';
 import 'package:cluck_care/features/orders/presentation/order_details_screen.dart';
 import 'package:cluck_care/core/app_flow/app_controllers.dart';
@@ -110,28 +108,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ],
                       ),
-                  // Refresh button to reset onboarding and show onboarding flow again
-                  Material(
-                    color: Colors.transparent,
-                    shape: const CircleBorder(),
-                    child: IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white70),
-                      tooltip: 'Reset onboarding',
-                      onPressed: () async {
-                        HapticFeedback.selectionClick();
-                        await OnboardingService.resetOnboarding();
-                        if (!mounted) return;
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(builder: (_) => const SplashScreen()),
-                          (route) => false,
-                        );
-                      },
-                    ),
-                  ),
                     ],
                   ),
-        ],
-      ),
+                ],
+              ),
               
               SizedBox(height: isSmallScreen ? 20 : 24),
               
