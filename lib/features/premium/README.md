@@ -91,4 +91,7 @@ The current implementation provides a complete UI foundation that can be easily 
 
 
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
